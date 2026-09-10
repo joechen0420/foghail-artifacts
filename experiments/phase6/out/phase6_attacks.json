@@ -1,0 +1,20 @@
+{
+  "N_cells": 1337,
+  "e4a_dictionary": {
+    "driver_cell_top1_saltknown": 1.0,
+    "rider_neighborhood_recover": 1.0,
+    "driver_cell_top1_stalesalt": 0.0,
+    "neighborhood_area_km2": 0.562
+  },
+  "e4b_harvesting": {
+    "service_cells_N": 1337,
+    "median_queries_to_localize": 10,
+    "p95_queries": 11,
+    "theoretical_log2N": 10.4,
+    "oride_queries": 1
+  },
+  "e7_linkage": {
+    "auc_same_epoch": 1.0,
+    "auc_cross_epoch": 0.495
+  }
+}

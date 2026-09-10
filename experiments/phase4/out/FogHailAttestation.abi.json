@@ -1,0 +1,157 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "pseudonym",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "newValue",
+        "type": "int256"
+      }
+    ],
+    "name": "ReputationUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "tripHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "TripAttested",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tripHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "riderPseudo",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "driverPseudo",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "int256",
+        "name": "dRider",
+        "type": "int256"
+      },
+      {
+        "internalType": "int256",
+        "name": "dDriver",
+        "type": "int256"
+      }
+    ],
+    "name": "attestAndSettle",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tripHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "attestTrip",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "reputation",
+    "outputs": [
+      {
+        "internalType": "int256",
+        "name": "",
+        "type": "int256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tripHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "riderPseudo",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "driverPseudo",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "int256",
+        "name": "dRider",
+        "type": "int256"
+      },
+      {
+        "internalType": "int256",
+        "name": "dDriver",
+        "type": "int256"
+      }
+    ],
+    "name": "settleTrip",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "tripExists",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

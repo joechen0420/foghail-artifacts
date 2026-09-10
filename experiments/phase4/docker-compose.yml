@@ -1,0 +1,60 @@
+# FogHail 4 節點 Besu QBFT 私有鏈（EC2 t3.medium ×4 或單機容器模擬）
+# 使用前：
+#   1) besu operator generate-blockchain-config --config-file=qbft-config.json \
+#        --to=networkFiles --private-key-file-name=key
+#   2) 把 4 把 validator 位址填入 qbft-genesis.json 的 extraData，key 放各節點
+#   3) docker compose up
+version: "3.8"
+x-besu: &besu
+  image: hyperledger/besu:24.7.0
+  volumes:
+    - ./qbft-genesis.json:/config/genesis.json:ro
+  command: >
+    --genesis-file=/config/genesis.json
+    --rpc-http-enabled --rpc-http-api=ETH,NET,QBFT,WEB3
+    --rpc-http-host=0.0.0.0 --host-allowlist=*
+    --min-gas-price=0
+
+services:
+  node1:
+    <<: *besu
+    ports: ["8545:8545"]
+    volumes:
+      - ./qbft-genesis.json:/config/genesis.json:ro
+      - ./networkFiles/keys/node1:/opt/besu/data/key:ro
+    command: >
+      --genesis-file=/config/genesis.json --data-path=/opt/besu/data
+      --node-private-key-file=/opt/besu/data/key
+      --rpc-http-enabled --rpc-http-api=ETH,NET,QBFT,WEB3,TXPOOL
+      --rpc-http-host=0.0.0.0 --rpc-http-port=8545 --host-allowlist=*
+      --p2p-port=30303 --min-gas-price=0
+  node2:
+    <<: *besu
+    ports: ["8546:8545"]
+    volumes:
+      - ./qbft-genesis.json:/config/genesis.json:ro
+      - ./networkFiles/keys/node2:/opt/besu/data/key:ro
+    command: >
+      --genesis-file=/config/genesis.json --data-path=/opt/besu/data
+      --node-private-key-file=/opt/besu/data/key --bootnodes=__ENODE_NODE1__
+      --rpc-http-enabled --rpc-http-host=0.0.0.0 --host-allowlist=* --min-gas-price=0
+  node3:
+    <<: *besu
+    ports: ["8547:8545"]
+    volumes:
+      - ./qbft-genesis.json:/config/genesis.json:ro
+      - ./networkFiles/keys/node3:/opt/besu/data/key:ro
+    command: >
+      --genesis-file=/config/genesis.json --data-path=/opt/besu/data
+      --node-private-key-file=/opt/besu/data/key --bootnodes=__ENODE_NODE1__
+      --rpc-http-enabled --rpc-http-host=0.0.0.0 --host-allowlist=* --min-gas-price=0
+  node4:
+    <<: *besu
+    ports: ["8548:8545"]
+    volumes:
+      - ./qbft-genesis.json:/config/genesis.json:ro
+      - ./networkFiles/keys/node4:/opt/besu/data/key:ro
+    command: >
+      --genesis-file=/config/genesis.json --data-path=/opt/besu/data
+      --node-private-key-file=/opt/besu/data/key --bootnodes=__ENODE_NODE1__
+      --rpc-http-enabled --rpc-http-host=0.0.0.0 --host-allowlist=* --min-gas-price=0

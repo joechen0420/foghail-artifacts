@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+# generated at runtime
+experiments/phase0/data/raw/
+experiments/phase0/data/clean/
+experiments/phase0/data/ground_truth/
+experiments/phase4/besu-dist*/
+experiments/phase4/networkFiles*/
+experiments/phase4/out/nodelogs*/
