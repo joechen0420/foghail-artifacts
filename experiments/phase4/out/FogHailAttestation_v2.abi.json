@@ -1,0 +1,320 @@
+[
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "_epochBlocks",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "constructor"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "epoch",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "bytes32",
+    "name": "salt",
+    "type": "bytes32"
+   }
+  ],
+  "name": "EpochSalt",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "pseudonym",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "int256",
+    "name": "newValue",
+    "type": "int256"
+   }
+  ],
+  "name": "ReputationUpdated",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "tripHash",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "timestamp",
+    "type": "uint256"
+   }
+  ],
+  "name": "TripAttested",
+  "type": "event"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "tripHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint8",
+    "name": "status",
+    "type": "uint8"
+   },
+   {
+    "components": [
+     {
+      "internalType": "address",
+      "name": "pseudonym",
+      "type": "address"
+     },
+     {
+      "internalType": "uint8",
+      "name": "gives",
+      "type": "uint8"
+     },
+     {
+      "internalType": "bytes32",
+      "name": "credSerial",
+      "type": "bytes32"
+     },
+     {
+      "internalType": "bytes",
+      "name": "sig",
+      "type": "bytes"
+     }
+    ],
+    "internalType": "struct FogHailAttestation.Party",
+    "name": "rider",
+    "type": "tuple"
+   },
+   {
+    "components": [
+     {
+      "internalType": "address",
+      "name": "pseudonym",
+      "type": "address"
+     },
+     {
+      "internalType": "uint8",
+      "name": "gives",
+      "type": "uint8"
+     },
+     {
+      "internalType": "bytes32",
+      "name": "credSerial",
+      "type": "bytes32"
+     },
+     {
+      "internalType": "bytes",
+      "name": "sig",
+      "type": "bytes"
+     }
+    ],
+    "internalType": "struct FogHailAttestation.Party",
+    "name": "driver",
+    "type": "tuple"
+   }
+  ],
+  "name": "attestAndSettle",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "name": "credentialSpent",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "currentEpoch",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "epochBlocks",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "name": "epochSalt",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint8",
+    "name": "status",
+    "type": "uint8"
+   },
+   {
+    "internalType": "uint8",
+    "name": "rating",
+    "type": "uint8"
+   }
+  ],
+  "name": "ratingDelta",
+  "outputs": [
+   {
+    "internalType": "int256",
+    "name": "",
+    "type": "int256"
+   }
+  ],
+  "stateMutability": "pure",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "tripHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint8",
+    "name": "status",
+    "type": "uint8"
+   },
+   {
+    "internalType": "uint8",
+    "name": "rating",
+    "type": "uint8"
+   },
+   {
+    "internalType": "address",
+    "name": "counterpart",
+    "type": "address"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "credSerial",
+    "type": "bytes32"
+   }
+  ],
+  "name": "ratingDigest",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "reputation",
+  "outputs": [
+   {
+    "internalType": "int256",
+    "name": "",
+    "type": "int256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "rollEpoch",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "s",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "name": "tripExists",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ }
+]

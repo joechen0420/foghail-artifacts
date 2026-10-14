@@ -1,0 +1,24 @@
+{
+  "desktop_ms": {
+    "v1_r1_single_issue": 2.7159999999639695,
+    "v1_r1_single_verify": 3.171749999637541,
+    "k1_single_issue": 2.714400000513706,
+    "k1_single_verify": 2.1941999993941863,
+    "v3_k1_3of4_issue": 8.668450000186567,
+    "v3_k1_3of4_verify": 7.4646500006565475
+  },
+  "ratio_v3_over_v1": {
+    "issue": 3.1916237114512382,
+    "verify": 2.353479940572109
+  },
+  "phone_v1_measured_ms": {
+    "issue_ms": 2.15,
+    "verify_ms": 1.41
+  },
+  "phone_v3_estimated_ms": {
+    "credential_issue": 6.861990979620162,
+    "credential_verify": 3.318406716206674,
+    "receipt_issue": 6.861990979620162,
+    "per_trip_total": 13.723981959240325
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "epoch_s": 3600,
+  "batch_s": 30,
+  "avail_s": 600,
+  "n_requests": 21433,
+  "n_supply": 21433,
+  "grids": {
+    "100": {
+      "rider": {
+        "n_uploads": 21433,
+        "k_median": 14.0,
+        "k_p5": 2.0,
+        "k_p25": 7.0,
+        "frac_k1": 0.0464,
+        "frac_k_le5": 0.1971,
+        "mean_link_success": 0.147
+      },
+      "driver": {
+        "n_uploads": 428637,
+        "k_median": 2.0,
+        "k_p5": 1.0,
+        "k_p25": 1.0,
+        "frac_k1": 0.3159,
+        "frac_k_le5": 0.8074,
+        "mean_link_success": 0.5186
+      }
+    },
+    "250": {
+      "rider": {
+        "n_uploads": 21433,
+        "k_median": 57.0,
+        "k_p5": 6.0,
+        "k_p25": 32.0,
+        "frac_k1": 0.0149,
+        "frac_k_le5": 0.0479,
+        "mean_link_success": 0.0495
+      },
+      "driver": {
+        "n_uploads": 428637,
+        "k_median": 9.0,
+        "k_p5": 1.0,
+        "k_p25": 4.0,
+        "frac_k1": 0.1023,
+        "frac_k_le5": 0.3491,
+        "mean_link_success": 0.2357
+      }
+    },
+    "500": {
+      "rider": {
+        "n_uploads": 21433,
+        "k_median": 184.0,
+        "k_p5": 18.0,
+        "k_p25": 108.0,
+        "frac_k1": 0.0067,
+        "frac_k_le5": 0.0191,
+        "mean_link_success": 0.0212
+      },
+      "driver": {
+        "n_uploads": 428637,
+        "k_median": 26.0,
+        "k_p5": 2.0,
+        "k_p25": 12.0,
+        "frac_k1": 0.0492,
+        "frac_k_le5": 0.1325,
+        "mean_link_success": 0.1162
+      }
+    }
+  }
+}

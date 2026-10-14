@@ -1,0 +1,139 @@
+{
+  "contract": "0x9b8BE113AE8E94470B5d498C708110C02e662CcB",
+  "theta": 0,
+  "threshold": "3-of-4",
+  "salt_beacon": {
+    "epoch": 0,
+    "salt": "0x097d25680df729c3012e19a44471e266e2f96da8f5c4118dfe3c4616afc59533"
+  },
+  "protocol_checks": {
+    "register_by_non_registrar": "Execution reverted (registrar only)', 'data': '0x08c379a0000",
+    "open_second_batch_while_outstanding": "Execution reverted (outstanding)', 'data': '0x08c379a0000000",
+    "blind_issue_4_credentials_s": 1.266,
+    "issue_beyond_batch": "V0: batch not open or exhausted",
+    "settle_without_fog_match": "Execution reverted (fog sig)', 'data': '0x08c379a00000000000",
+    "settle_with_bad_validator_sig": "Execution reverted (credential sig)', 'data': '0x08c379a0000",
+    "settle_with_duplicate_validator": "Execution reverted (signer index)', 'data': '0x08c379a000000",
+    "settle_with_self_made_credential": "Execution reverted (credential sig)', 'data': '0x08c379a0000",
+    "valid_settle_status": 1,
+    "settle_same_trip_again": "Execution reverted (trip exists)', 'data': '0x08c379a0000000",
+    "reuse_spent_credential": "Execution reverted (credential spent)', 'data': '0x08c379a00",
+    "pending_delta_A_B": [
+      -1,
+      2
+    ],
+    "second_receipt_same_pseudonym": "V0: receipt already issued",
+    "receipt_serial_seen_by_validators": false,
+    "rootRep_after_deposit": {
+      "A": -1,
+      "B": 2
+    },
+    "outstanding_after_deposit": {
+      "A": 0,
+      "B": 0
+    },
+    "A_open_batch_below_theta": "Execution reverted (reputation below theta)', 'data': '0x08c",
+    "validator_issue_below_theta": "V0: R_root < θ, refuse",
+    "deposit_same_receipt_twice": "Execution reverted (receipt spent)', 'data': '0x08c379a00000",
+    "use_returned_unused_credential": "Execution reverted (credential spent)', 'data': '0x08c379a00",
+    "concurrent_blind_session": "issuer busy: concurrent blind session refused (ROS)"
+  },
+  "gas": {
+    "registerRoot": 45410,
+    "openBatch": 94298,
+    "attestAndSettle": 256902,
+    "deposit(1 receipt+1 unused)": 143982,
+    "deploy": 2562482,
+    "rollEpoch": 45692
+  },
+  "settle_gas_median": 256878,
+  "settle_tx_bytes_median": 1420,
+  "sampled_receipts_ok": "100/100",
+  "rows": [
+    {
+      "label": "sequential",
+      "target_rate": null,
+      "achieved_send_rate": 0.455388703396395,
+      "n_confirmed": 200,
+      "n_missing": 0,
+      "p50_s": 2.009,
+      "p95_s": 4.012,
+      "p99_s": 4.043,
+      "max_s": 4.065,
+      "frac_le_3s": 0.695,
+      "blocks": 438,
+      "tx_per_block_mean": 1,
+      "tx_per_block_max": 1,
+      "block_interval_mean_s": 1,
+      "throughput_tx_per_s": 0.5
+    },
+    {
+      "label": "open-loop 5/s",
+      "target_rate": 5,
+      "achieved_send_rate": 5.0161286091233315,
+      "n_confirmed": 300,
+      "n_missing": 0,
+      "p50_s": 2.231,
+      "p95_s": 4.35,
+      "p99_s": 4.581,
+      "max_s": 4.77,
+      "frac_le_3s": 0.7233,
+      "blocks": 62,
+      "tx_per_block_mean": 6.8,
+      "tx_per_block_max": 20,
+      "block_interval_mean_s": 1,
+      "throughput_tx_per_s": 4.9
+    },
+    {
+      "label": "open-loop 10/s",
+      "target_rate": 10,
+      "achieved_send_rate": 10.030768177692822,
+      "n_confirmed": 300,
+      "n_missing": 0,
+      "p50_s": 4.041,
+      "p95_s": 6.523,
+      "p99_s": 6.819,
+      "max_s": 6.922,
+      "frac_le_3s": 0.28,
+      "blocks": 29,
+      "tx_per_block_mean": 16.7,
+      "tx_per_block_max": 50,
+      "block_interval_mean_s": 1.21,
+      "throughput_tx_per_s": 8.8
+    },
+    {
+      "label": "open-loop 20/s",
+      "target_rate": 20,
+      "achieved_send_rate": 20.054811672083495,
+      "n_confirmed": 300,
+      "n_missing": 0,
+      "p50_s": 6.333,
+      "p95_s": 14.31,
+      "p99_s": 17.085,
+      "max_s": 18.281,
+      "frac_le_3s": 0.0533,
+      "blocks": 17,
+      "tx_per_block_mean": 33.3,
+      "tx_per_block_max": 78,
+      "block_interval_mean_s": 1.38,
+      "throughput_tx_per_s": 13.6
+    },
+    {
+      "label": "open-loop 50/s",
+      "target_rate": 50,
+      "achieved_send_rate": 50.11465146436845,
+      "n_confirmed": 300,
+      "n_missing": 0,
+      "p50_s": 12.706,
+      "p95_s": 23.781,
+      "p99_s": 24.416,
+      "max_s": 24.872,
+      "frac_le_3s": 0.01,
+      "blocks": 19,
+      "tx_per_block_mean": 42.9,
+      "tx_per_block_max": 82,
+      "block_interval_mean_s": 1.44,
+      "throughput_tx_per_s": 11.5
+    }
+  ]
+}

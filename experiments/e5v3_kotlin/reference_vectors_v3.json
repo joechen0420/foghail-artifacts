@@ -1,0 +1,26 @@
+{
+ "note": "MainActivity.kt 與 V3VectorTest.kt 內嵌的就是這組值。簽章為 Python foghail_cred.plain_sign 產生，任何合法簽章都可，重產會不同但都要驗得過。",
+ "curve": "secp256k1",
+ "msg_hex": "1111111111111111111111111111111111111111",
+ "known_addr_of_privkey_1": "7e5f4552091a69125d5dfcb7b8c2659029395bdf",
+ "validators": [
+  {
+   "x_hex": "44b47b75112ccd766df0fc3f6cd3970b7bcc50d857915211b48ea6e03fe56250",
+   "addr_hex": "914b727fcea9985a7b8f746c99dde7ac2fda9cab",
+   "sig_addrR_hex": "5dd4ba9b8c603a6f595535072984caf9e2342305",
+   "sig_s_hex": "7e22ac2f322c7ff410ecb1930a6346dc0f744159bb4ea39899405eaf49927016"
+  },
+  {
+   "x_hex": "5edf81d118c8353da9e62f86ed948c66c7d28bf3bb75671b693322f8868e33a7",
+   "addr_hex": "a28e32fecb540bdd060c842e2330b0653c5d6367",
+   "sig_addrR_hex": "ff3860e05e62ee4d1a5ed0a62a4e1d37bb5f888c",
+   "sig_s_hex": "4881c8db9f28ef8dadd93419d624672f660710f6ef40f19d199838c1f29fd7f1"
+  },
+  {
+   "x_hex": "bc9b41099e57ca6e5ce415d23b7729bab029cd73a6f42eed9a94945c2cb4555e",
+   "addr_hex": "d3f39db69c61470ca01e82531614b384a511e993",
+   "sig_addrR_hex": "c6efc3de1e4a7d8be80e7e2bc2f4028a1d3c9aad",
+   "sig_s_hex": "d85de3863bda28cd461bc05f3890cbbc37663fe412bae67cc0e0dfa3618a534d"
+  }
+ ]
+}
