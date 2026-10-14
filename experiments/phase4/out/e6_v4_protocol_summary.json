@@ -1,0 +1,68 @@
+{
+  "contract": "0xE410ee1C471643027F0283e9331389BDeC4Ebce5",
+  "theta": 0,
+  "threshold": "3-of-4",
+  "issuance": "on-chain budget T*B, holder-authorized, logged per partial",
+  "salt_beacon": {
+    "epoch": 0,
+    "salt": "0x0013b347cda3d2be541a5af155ba58e1960ef8d765b860ae2e8f8143d9dd44d9"
+  },
+  "protocol_checks": {
+    "register_by_non_registrar": "Execution reverted (registrar only)', 'data': '0x08c379a0000",
+    "P0-2_logIssue_wrong_root_key": "Execution reverted (root auth)', 'data': '0x08c379a000000000",
+    "P0-2_logIssue_by_non_validator": "Execution reverted (validator only)', 'data': '0x08c379a0000",
+    "blind_issue_3_credentials_s": 35.93,
+    "P0-1_fourth_credential_validator": "V1: batch not open or budget exhausted",
+    "P0-1_fourth_credential_onchain": "Execution reverted (batch budget)', 'data': '0x08c379a000000",
+    "A_outstanding_units_after_issue": 9,
+    "open_second_batch_while_outstanding": "Execution reverted (outstanding)', 'data': '0x08c379a0000000",
+    "settle_without_fog_match": "Execution reverted (fog sig)', 'data': '0x08c379a00000000000",
+    "settle_with_bad_validator_sig": "Execution reverted (credential sig)', 'data': '0x08c379a0000",
+    "settle_with_duplicate_validator": "Execution reverted (signer index)', 'data': '0x08c379a000000",
+    "settle_with_self_made_credential": "Execution reverted (credential sig)', 'data': '0x08c379a0000",
+    "valid_settle_status": 1,
+    "settle_same_trip_again": "Execution reverted (trip exists)', 'data': '0x08c379a0000000",
+    "reuse_spent_credential": "Execution reverted (credential spent)', 'data': '0x08c379a00",
+    "P0-2_logReceipt_by_non_holder": "Execution reverted (pseudonym auth)', 'data': '0x08c379a0000",
+    "P1_front_run_unused_return": "Execution reverted (possession)', 'data': '0x08c379a00000000",
+    "P0-1_outstanding_without_negative_receipt": 3,
+    "P0-1_open_batch_without_negative_receipt": "Execution reverted (outstanding)', 'data': '0x08c379a0000000",
+    "blind_receipts_2_s": 23.79,
+    "pending_delta_A_B": [
+      -2,
+      2
+    ],
+    "P0-3_fourth_validator_receipt": "V3: receipt already issued",
+    "P0-3_fourth_validator_receipt_onchain": "Execution reverted (receipt quota)', 'data': '0x08c379a00000",
+    "P0-3_second_receipt_after_restart": "V0: receipt already issued",
+    "P1_deposit_others_receipt": "Execution reverted (credential sig)', 'data': '0x08c379a0000",
+    "rootRep_after_deposit": {
+      "A": -2,
+      "B": 2
+    },
+    "outstanding_after_deposit": {
+      "A": 0,
+      "B": 0
+    },
+    "A_open_batch_below_theta": "Execution reverted (reputation below theta)', 'data': '0x08c",
+    "deposit_same_receipt_twice": "Execution reverted (receipt spent)', 'data': '0x08c379a00000",
+    "use_returned_unused_credential": "Execution reverted (credential spent)', 'data': '0x08c379a00",
+    "B_reopen_after_clearing": true,
+    "concurrent_blind_session": "issuer busy: concurrent blind session refused (ROS)"
+  },
+  "gas": {
+    "registerRoot": 45454,
+    "openBatch": 76582,
+    "attestAndSettle": 257226,
+    "deposit(2 unused)": 143859,
+    "deposit(1 receipt)": 91705,
+    "logIssue_median": 75919,
+    "logReceipt_median": 67721,
+    "deploy": 3066008,
+    "rollEpoch": 45846
+  },
+  "settle_gas_median": 257226,
+  "settle_tx_bytes_median": null,
+  "sampled_receipts_ok": "0/0",
+  "rows": []
+}

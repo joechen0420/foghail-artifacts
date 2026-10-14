@@ -1,0 +1,1067 @@
+[
+ {
+  "inputs": [
+   {
+    "internalType": "uint256[4]",
+    "name": "credPx",
+    "type": "uint256[4]"
+   },
+   {
+    "internalType": "uint8[4]",
+    "name": "credParity",
+    "type": "uint8[4]"
+   },
+   {
+    "internalType": "uint256[20]",
+    "name": "rcptPx",
+    "type": "uint256[20]"
+   },
+   {
+    "internalType": "uint8[20]",
+    "name": "rcptParity",
+    "type": "uint8[20]"
+   },
+   {
+    "internalType": "address[4]",
+    "name": "validators",
+    "type": "address[4]"
+   },
+   {
+    "internalType": "address[]",
+    "name": "fogNodes",
+    "type": "address[]"
+   },
+   {
+    "internalType": "address",
+    "name": "_registrar",
+    "type": "address"
+   },
+   {
+    "internalType": "int256",
+    "name": "_theta",
+    "type": "int256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "_epochBlocks",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "constructor"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "root",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "nonce",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "size",
+    "type": "uint256"
+   }
+  ],
+  "name": "BatchOpened",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "root",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "units",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "int256",
+    "name": "newRep",
+    "type": "int256"
+   }
+  ],
+  "name": "Deposited",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "epoch",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "bytes32",
+    "name": "salt",
+    "type": "bytes32"
+   }
+  ],
+  "name": "EpochSalt",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "root",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint8",
+    "name": "validator",
+    "type": "uint8"
+   }
+  ],
+  "name": "IssueLogged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "pseudonym",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint8",
+    "name": "validator",
+    "type": "uint8"
+   }
+  ],
+  "name": "ReceiptLogged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "root",
+    "type": "address"
+   }
+  ],
+  "name": "RootRegistered",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "pseudonym",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "int8",
+    "name": "delta",
+    "type": "int8"
+   }
+  ],
+  "name": "Settled",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "bytes32",
+    "name": "tripHash",
+    "type": "bytes32"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "timestamp",
+    "type": "uint256"
+   }
+  ],
+  "name": "TripAttested",
+  "type": "event"
+ },
+ {
+  "inputs": [],
+  "name": "KIND_CRED",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "KIND_RCPT",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "KIND_RETURN",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "MAX_BATCH",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "T",
+  "outputs": [
+   {
+    "internalType": "uint8",
+    "name": "",
+    "type": "uint8"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "V",
+  "outputs": [
+   {
+    "internalType": "uint8",
+    "name": "",
+    "type": "uint8"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "tripHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint8",
+    "name": "status",
+    "type": "uint8"
+   },
+   {
+    "components": [
+     {
+      "internalType": "address",
+      "name": "pseudonym",
+      "type": "address"
+     },
+     {
+      "internalType": "uint8",
+      "name": "gives",
+      "type": "uint8"
+     },
+     {
+      "components": [
+       {
+        "internalType": "uint8",
+        "name": "idx",
+        "type": "uint8"
+       },
+       {
+        "internalType": "address",
+        "name": "r",
+        "type": "address"
+       },
+       {
+        "internalType": "uint256",
+        "name": "s",
+        "type": "uint256"
+       }
+      ],
+      "internalType": "struct FogHailAttestation.Sig[3]",
+      "name": "cred",
+      "type": "tuple[3]"
+     },
+     {
+      "internalType": "bytes",
+      "name": "sig",
+      "type": "bytes"
+     }
+    ],
+    "internalType": "struct FogHailAttestation.Party",
+    "name": "rider",
+    "type": "tuple"
+   },
+   {
+    "components": [
+     {
+      "internalType": "address",
+      "name": "pseudonym",
+      "type": "address"
+     },
+     {
+      "internalType": "uint8",
+      "name": "gives",
+      "type": "uint8"
+     },
+     {
+      "components": [
+       {
+        "internalType": "uint8",
+        "name": "idx",
+        "type": "uint8"
+       },
+       {
+        "internalType": "address",
+        "name": "r",
+        "type": "address"
+       },
+       {
+        "internalType": "uint256",
+        "name": "s",
+        "type": "uint256"
+       }
+      ],
+      "internalType": "struct FogHailAttestation.Sig[3]",
+      "name": "cred",
+      "type": "tuple[3]"
+     },
+     {
+      "internalType": "bytes",
+      "name": "sig",
+      "type": "bytes"
+     }
+    ],
+    "internalType": "struct FogHailAttestation.Party",
+    "name": "driver",
+    "type": "tuple"
+   },
+   {
+    "internalType": "bytes",
+    "name": "fogSig",
+    "type": "bytes"
+   }
+  ],
+  "name": "attestAndSettle",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "kind",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint256",
+    "name": "ctx",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint8",
+    "name": "v",
+    "type": "uint8"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "h",
+    "type": "bytes32"
+   }
+  ],
+  "name": "authDigest",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "batchBudget",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "batchIssued",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "batchNonce",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "currentEpoch",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "components": [
+     {
+      "internalType": "bytes32",
+      "name": "r",
+      "type": "bytes32"
+     },
+     {
+      "internalType": "int8",
+      "name": "delta",
+      "type": "int8"
+     },
+     {
+      "components": [
+       {
+        "internalType": "uint8",
+        "name": "idx",
+        "type": "uint8"
+       },
+       {
+        "internalType": "address",
+        "name": "r",
+        "type": "address"
+       },
+       {
+        "internalType": "uint256",
+        "name": "s",
+        "type": "uint256"
+       }
+      ],
+      "internalType": "struct FogHailAttestation.Sig[3]",
+      "name": "sigs",
+      "type": "tuple[3]"
+     }
+    ],
+    "internalType": "struct FogHailAttestation.Receipt[]",
+    "name": "rs",
+    "type": "tuple[]"
+   },
+   {
+    "components": [
+     {
+      "internalType": "address",
+      "name": "pseudonym",
+      "type": "address"
+     },
+     {
+      "components": [
+       {
+        "internalType": "uint8",
+        "name": "idx",
+        "type": "uint8"
+       },
+       {
+        "internalType": "address",
+        "name": "r",
+        "type": "address"
+       },
+       {
+        "internalType": "uint256",
+        "name": "s",
+        "type": "uint256"
+       }
+      ],
+      "internalType": "struct FogHailAttestation.Sig[]",
+      "name": "sigs",
+      "type": "tuple[]"
+     },
+     {
+      "internalType": "bytes",
+      "name": "possession",
+      "type": "bytes"
+     }
+    ],
+    "internalType": "struct FogHailAttestation.Unused[]",
+    "name": "us",
+    "type": "tuple[]"
+   }
+  ],
+  "name": "deposit",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "epochBlocks",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "name": "epochSalt",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "hasPending",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "isFog",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "root",
+    "type": "address"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "h",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "bytes",
+    "name": "auth",
+    "type": "bytes"
+   }
+  ],
+  "name": "logIssue",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "p",
+    "type": "address"
+   },
+   {
+    "internalType": "bytes32",
+    "name": "h",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "bytes",
+    "name": "auth",
+    "type": "bytes"
+   }
+  ],
+  "name": "logReceipt",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "tripHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "address",
+    "name": "rider",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "driver",
+    "type": "address"
+   }
+  ],
+  "name": "matchDigest",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "size",
+    "type": "uint256"
+   }
+  ],
+  "name": "openBatch",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "outstanding",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "pendingDelta",
+  "outputs": [
+   {
+    "internalType": "int8",
+    "name": "",
+    "type": "int8"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "pseudonymSpent",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint8",
+    "name": "status",
+    "type": "uint8"
+   },
+   {
+    "internalType": "uint8",
+    "name": "rating",
+    "type": "uint8"
+   }
+  ],
+  "name": "ratingDelta",
+  "outputs": [
+   {
+    "internalType": "int8",
+    "name": "",
+    "type": "int8"
+   }
+  ],
+  "stateMutability": "pure",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "tripHash",
+    "type": "bytes32"
+   },
+   {
+    "internalType": "uint8",
+    "name": "status",
+    "type": "uint8"
+   },
+   {
+    "internalType": "uint8",
+    "name": "rating",
+    "type": "uint8"
+   },
+   {
+    "internalType": "address",
+    "name": "counterpart",
+    "type": "address"
+   }
+  ],
+  "name": "ratingDigest",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "receiptMask",
+  "outputs": [
+   {
+    "internalType": "uint8",
+    "name": "",
+    "type": "uint8"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "name": "receiptSpent",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "root",
+    "type": "address"
+   }
+  ],
+  "name": "registerRoot",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "registered",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "registrar",
+  "outputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "root",
+    "type": "address"
+   }
+  ],
+  "name": "returnDigest",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "rollEpoch",
+  "outputs": [
+   {
+    "internalType": "bytes32",
+    "name": "s",
+    "type": "bytes32"
+   }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "name": "rootRep",
+  "outputs": [
+   {
+    "internalType": "int256",
+    "name": "",
+    "type": "int256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "name": "sessionLogged",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "theta",
+  "outputs": [
+   {
+    "internalType": "int256",
+    "name": "",
+    "type": "int256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bytes32",
+    "name": "",
+    "type": "bytes32"
+   }
+  ],
+  "name": "tripExists",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "name": "validatorAddr",
+  "outputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ }
+]

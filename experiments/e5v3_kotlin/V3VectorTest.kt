@@ -33,6 +33,19 @@ class V3VectorTest {
         }
     }
 
+    /** v4 授權簽章：與 Python foghail_cred.esign(auth_digest(...)) 逐位元組相同（RFC 6979 決定性簽章）。 */
+    @Test fun v4AuthVector() {
+        val key = BigInteger("4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318", 16)
+        assertEquals("f3d468109ae8697656f2d9d68ec856aa4a235d3b1abd257b69d00481d6d17ae5", V.hex(V.KIND_CRED))
+        val h = V.sessionHash(V.G.multiply(BigInteger.valueOf(7)), BigInteger.valueOf(123456789))
+        assertEquals("91f51e88888fd0056a40c3e7967f5841bcddb9f45430ac9160ceabc94d37d886", V.hex(h))
+        val d = V.authDigest(ByteArray(20) { 0x11 }, 1337, V.KIND_CRED, 1, 2, h)
+        assertEquals("e4ecf022466a2f5b64ffbdba9c63b50d59db8d84fb12fa68695bf692539fb901", V.hex(d))
+        assertEquals("57516efbfc0ac3112f22b564a69abb55a1240d68d62107574d7be20af3949f98" +
+                     "3e23e7a2a5407aa6dc7d6cd894e49fa8b88c7cc4315e08db3ae80c0b80be8feb1c", V.hex(V.ethSign(key, d)))
+        assertEquals("2c7536e3605d9c16a7a3d7b1898e529396a65c23", V.hex(V.ethAddress(key)))
+    }
+
     @Test fun blindAndRos() {
         val iss = FogHailCredV3.Issuer()
         assertTrue(V.verify(iss.P, msg, V.blindSign(iss, msg)))

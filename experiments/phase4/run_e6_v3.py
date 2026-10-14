@@ -27,7 +27,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT.parent / "phase5"))
 import run_e6_local as L          # noqa: E402
 import run_e6_v2 as V2            # noqa: E402  BlockWatcher / run_row / stats / send_and_wait
-import foghail_cred as F          # noqa: E402
+import foghail_cred_v3 as F       # noqa: E402  v3 量測當時的版本（v4 見 run_e6_v4.py）
 
 from web3 import Web3                            # noqa: E402
 from eth_account import Account                  # noqa: E402

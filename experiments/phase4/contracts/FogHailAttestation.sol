@@ -1,32 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-/// @title FogHail 存證＋雙邊信譽合約（v3，2026-10-14）
-/// @notice 對照同事外審第 2 題與代理自查的問題，v3 在 v2（防重複結算、雙方簽評分、ΔR 由合約算、
-///         鹽值信標）之上再補：
-///   (a) 門檻發行：4 個驗證節點各持一把憑證金鑰，憑證要帶其中 T=3 把各自的 Schnorr 盲簽章，
-///       合約在結算時逐一驗證（ecrecover 技巧，secp256k1）。
-///   (b) 憑證綁假名：憑證簽的訊息就是本趟假名的地址，結算後該假名標為已用（一次性）。
-///   (c) 發行前檢查信譽：根身分要 openBatch 才能領憑證；openBatch 要求 R_root ≥ θ 且上一批已清帳。
-///       驗證節點只對「已開、未領滿」的批次簽章（鏈下依本合約狀態判定）。
-///   (d) 信譽累積：結算後每個假名有一筆待領 ΔR；假名向驗證節點領一張依面額盲簽的收據，
-///       根身分 deposit 收據時合約驗章、記序號、把 ΔR 加到 R_root。收據經盲化，無法連回假名。
-///   (e) 負評逃避：openBatch(B) 後 outstanding = B，只能靠 deposit 收據或交回未用憑證扣減；
-///       outstanding 歸零前不能開新批次。用過的憑證只能用它那一趟的收據抵。
-///   (f) 串通捏造行程：結算要附霧節點對 (tripHash, 乘客假名, 駕駛假名) 的媒合簽章。
-///   (g) 洗白：根身分只能由 registrar 註冊（一人一個根身分，由平台的身分查核負責）。
+/// @title FogHail 存證＋雙邊信譽合約（v4，2026-10-14）
+/// @notice v3 見 contracts/archive/FogHailAttestation_v3.sol。v4 依 外審回稿/Code_Audit_2026-10-14.md 修正：
+///   P0-1 配額混用：v3 由各驗證節點自己限簽 B 次，4 個節點可湊出 4B/3 張 3-of-4 憑證。
+///        v4 由合約記帳：openBatch(B) 給整批 T·B 個部分簽章的預算，驗證節點每回一個部分簽章前都要
+///        logIssue 上鏈，超過預算即拒。每張憑證要 T 個，所以不論怎麼混用節點子集合最多 B 張。
+///        outstanding 改以「部分簽章」為單位：收據抵 T、未用憑證抵它帶的部分簽章數（1–4）。
+///   P0-2 持有人授權：logIssue 要附根身分對 authDigest(KIND_CRED, 批次號, 節點, h) 的簽章；
+///        logReceipt 要附假名對 authDigest(KIND_RCPT, 0, 節點, h) 的簽章；h = keccak(R, e) 綁一次盲簽會談。
+///   P0-3 持久化：發行記錄在鏈上，每個假名最多 T 個收據部分簽章（每節點一個），重啟或多實例共用同一份帳。
+///   P1  收據移轉：收據序號 = keccak(根身分 ‖ r)，deposit 用 msg.sender 重算；交回未用憑證要附假名的持有證明。
+/// 結算 attestAndSettle 與 v3 相同（論文 Table 8 量的就是這一段）。
 contract FogHailAttestation {
     uint256 private constant N =
         0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141;
     uint8 public constant T = 3;            // 門檻：4 把中要 3 把
     uint8 public constant V = 4;            // 驗證節點數
     uint256 public constant MAX_BATCH = 64;
+    bytes32 public constant KIND_CRED = keccak256("FOGHAIL_CRED");
+    bytes32 public constant KIND_RCPT = keccak256("FOGHAIL_RCPT");
+    bytes32 public constant KIND_RETURN = keccak256("FOGHAIL_RETURN");
 
     struct Key { uint256 px; uint8 parity; }
     struct Sig { uint8 idx; address r; uint256 s; }   // 第 idx 個驗證節點的 (addrR', s')
 
     Key[4] private credKey;
     Key[4][5] private receiptKey;           // [ΔR + 2][驗證節點]
+    address[4] public validatorAddr;        // 驗證節點上鏈記帳用的帳戶
     mapping(address => bool) public isFog;
     address public immutable registrar;
     int256 public immutable theta;
@@ -37,25 +38,30 @@ contract FogHailAttestation {
     // 身分表（根身分）
     mapping(address => bool) public registered;
     mapping(address => int256) public rootRep;
-    mapping(address => uint256) public outstanding;
+    mapping(address => uint256) public outstanding;     // 單位：部分簽章
     mapping(address => uint256) public batchNonce;
-    mapping(address => uint256) public batchSize;
+    mapping(address => uint256) public batchBudget;     // T · B
+    mapping(address => uint256) public batchIssued;
+    mapping(bytes32 => bool) public sessionLogged;      // h = keccak(R, e)
     // 行程與一次性物件
     mapping(bytes32 => bool) public tripExists;
-    mapping(address => bool) public pseudonymSpent;   // 憑證 = 假名地址
-    mapping(address => bool) public hasPending;       // 假名有待領收據
+    mapping(address => bool) public pseudonymSpent;     // 憑證 = 假名地址
+    mapping(address => bool) public hasPending;         // 假名有待領收據
     mapping(address => int8) public pendingDelta;
+    mapping(address => uint8) public receiptMask;       // 已對此假名發過收據部分簽章的節點
     mapping(bytes32 => bool) public receiptSpent;
 
     event EpochSalt(uint256 indexed epoch, bytes32 salt);
     event RootRegistered(address indexed root);
     event BatchOpened(address indexed root, uint256 nonce, uint256 size);
+    event IssueLogged(address indexed root, uint8 validator);
+    event ReceiptLogged(address indexed pseudonym, uint8 validator);
     event TripAttested(bytes32 indexed tripHash, uint256 timestamp);
     event Settled(address indexed pseudonym, int8 delta);
-    event Deposited(address indexed root, uint256 items, int256 newRep);
+    event Deposited(address indexed root, uint256 units, int256 newRep);
 
     constructor(uint256[4] memory credPx, uint8[4] memory credParity,
-                uint256[20] memory rcptPx, uint8[20] memory rcptParity,
+                uint256[20] memory rcptPx, uint8[20] memory rcptParity, address[4] memory validators,
                 address[] memory fogNodes, address _registrar, int256 _theta, uint256 _epochBlocks) {
         require(_epochBlocks > 0, "epochBlocks");
         for (uint256 v = 0; v < V; v++) {
@@ -63,6 +69,8 @@ contract FogHailAttestation {
             for (uint256 d = 0; d < 5; d++) {
                 receiptKey[d][v] = Key(rcptPx[d * V + v], rcptParity[d * V + v]);
             }
+            require(validators[v] != address(0), "validator");
+            validatorAddr[v] = validators[v];
         }
         for (uint256 i = 0; i < fogNodes.length; i++) isFog[fogNodes[i]] = true;
         registrar = _registrar;
@@ -94,13 +102,43 @@ contract FogHailAttestation {
         require(outstanding[msg.sender] == 0, "outstanding");
         require(rootRep[msg.sender] >= theta, "reputation below theta");
         require(size > 0 && size <= MAX_BATCH, "size");
-        outstanding[msg.sender] = size;
-        batchSize[msg.sender] = size;
         batchNonce[msg.sender] += 1;
+        batchBudget[msg.sender] = T * size;
+        batchIssued[msg.sender] = 0;
         emit BatchOpened(msg.sender, batchNonce[msg.sender], size);
     }
 
-    // ------------------------------------------------------------ 結算
+    // ------------------------------------------------------------ 發行記帳（驗證節點回應盲簽前呼叫）
+    function authDigest(bytes32 kind, uint256 ctx, uint8 v, bytes32 h) public view returns (bytes32) {
+        return keccak256(abi.encode(address(this), block.chainid, kind, ctx, v, h));
+    }
+
+    function logIssue(address root, bytes32 h, bytes calldata auth) external {
+        uint8 v = _validatorIndex();
+        require(registered[root], "not registered");
+        require(batchIssued[root] < batchBudget[root], "batch budget");
+        require(!sessionLogged[h], "session logged");
+        require(_ecdsa(authDigest(KIND_CRED, batchNonce[root], v, h), auth) == root, "root auth");
+        sessionLogged[h] = true;
+        batchIssued[root] += 1;
+        outstanding[root] += 1;
+        emit IssueLogged(root, v);
+    }
+
+    function logReceipt(address p, bytes32 h, bytes calldata auth) external {
+        uint8 v = _validatorIndex();
+        require(hasPending[p], "no settled trip");
+        uint8 mask = receiptMask[p];
+        require(mask & uint8(1 << v) == 0, "receipt logged");
+        require(_popcount(mask) < T, "receipt quota");
+        require(!sessionLogged[h], "session logged");
+        require(_ecdsa(authDigest(KIND_RCPT, 0, v, h), auth) == p, "pseudonym auth");
+        sessionLogged[h] = true;
+        receiptMask[p] = mask | uint8(1 << v);
+        emit ReceiptLogged(p, v);
+    }
+
+    // ------------------------------------------------------------ 結算（與 v3 相同）
     function ratingDelta(uint8 status, uint8 rating) public pure returns (int8) {
         require(rating >= 1 && rating <= 5, "rating");
         if (status != 0) return -2;
@@ -118,7 +156,7 @@ contract FogHailAttestation {
     }
 
     struct Party {
-        address pseudonym;   // 本趟（乘客）或本班（駕駛）假名，也是憑證的訊息
+        address pseudonym;   // 本趟結算假名，也是憑證的訊息
         uint8 gives;         // 給對方的評分 1–5
         Sig[3] cred;         // T 把驗證節點對假名的盲簽章
         bytes sig;           // 假名對 ratingDigest 的簽章
@@ -150,33 +188,52 @@ contract FogHailAttestation {
     }
 
     // ------------------------------------------------------------ 存回根身分
-    struct Receipt { bytes32 serial; int8 delta; Sig[3] sigs; }
-    struct Unused { address pseudonym; Sig[3] cred; }
+    struct Receipt { bytes32 r; int8 delta; Sig[3] sigs; }          // 序號 = keccak(根 ‖ r)
+    struct Unused { address pseudonym; Sig[] sigs; bytes possession; }
+
+    function returnDigest(address root) public view returns (bytes32) {
+        return keccak256(abi.encode(address(this), block.chainid, KIND_RETURN, root));
+    }
 
     function deposit(Receipt[] calldata rs, Unused[] calldata us) external {
-        uint256 items = rs.length + us.length;
-        require(items > 0 && items <= outstanding[msg.sender], "items");
+        uint256 units = 0;
         int256 sum = 0;
         for (uint256 i = 0; i < rs.length; i++) {
             Receipt calldata r = rs[i];
             require(r.delta >= -2 && r.delta <= 2, "delta");
-            require(!receiptSpent[r.serial], "receipt spent");
-            _checkCred(receiptKey[uint256(int256(r.delta) + 2)], abi.encodePacked(r.serial), r.sigs);
-            receiptSpent[r.serial] = true;
+            bytes32 serial = keccak256(abi.encode(msg.sender, r.r));
+            require(!receiptSpent[serial], "receipt spent");
+            _checkCred(receiptKey[uint256(int256(r.delta) + 2)], abi.encodePacked(serial), r.sigs);
+            receiptSpent[serial] = true;
             sum += r.delta;
+            units += T;
         }
+        bytes32 rd = returnDigest(msg.sender);
         for (uint256 j = 0; j < us.length; j++) {
             Unused calldata u = us[j];
             require(!pseudonymSpent[u.pseudonym], "credential spent");
-            _checkCred(credKey, abi.encodePacked(u.pseudonym), u.cred);
+            require(_ecdsa(rd, u.possession) == u.pseudonym, "possession");
+            require(u.sigs.length > 0 && u.sigs.length <= V, "partials");
+            _checkPartials(abi.encodePacked(u.pseudonym), u.sigs);
             pseudonymSpent[u.pseudonym] = true;
+            units += u.sigs.length;
         }
-        outstanding[msg.sender] -= items;
+        require(units > 0 && units <= outstanding[msg.sender], "units");
+        outstanding[msg.sender] -= units;
         rootRep[msg.sender] += sum;
-        emit Deposited(msg.sender, items, rootRep[msg.sender]);
+        emit Deposited(msg.sender, units, rootRep[msg.sender]);
     }
 
-    // ------------------------------------------------------------ 驗章
+    // ------------------------------------------------------------ 驗章與輔助
+    function _validatorIndex() private view returns (uint8) {
+        for (uint8 v = 0; v < V; v++) if (validatorAddr[v] == msg.sender) return v;
+        revert("validator only");
+    }
+
+    function _popcount(uint8 x) private pure returns (uint8 c) {
+        while (x != 0) { c += x & 1; x >>= 1; }
+    }
+
     function _checkCred(Key[4] storage keys, bytes memory m, Sig[3] calldata sigs) private view {
         uint256 seen = 0;
         for (uint256 i = 0; i < T; i++) {
@@ -184,6 +241,16 @@ contract FogHailAttestation {
             require(v < V && (seen & (1 << v)) == 0, "signer index");
             seen |= (1 << v);
             require(_schnorr(keys[v], m, sigs[i].r, sigs[i].s), "credential sig");
+        }
+    }
+
+    function _checkPartials(bytes memory m, Sig[] calldata sigs) private view {
+        uint256 seen = 0;
+        for (uint256 i = 0; i < sigs.length; i++) {
+            uint8 v = sigs[i].idx;
+            require(v < V && (seen & (1 << v)) == 0, "signer index");
+            seen |= (1 << v);
+            require(_schnorr(credKey[v], m, sigs[i].r, sigs[i].s), "credential sig");
         }
     }
 

@@ -19,7 +19,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import acl_reputation as V1      # noqa: E402  secp256r1 單一發行者
-import foghail_cred as F         # noqa: E402  secp256k1 v3
+import foghail_cred_v3 as F      # noqa: E402  secp256k1 v3（封存版，與當時量測同一份程式）
 
 REPS = 300
 PHONE_V1 = {"issue_ms": 2.15, "verify_ms": 1.41}   # Table 7（乘客）

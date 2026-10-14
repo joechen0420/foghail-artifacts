@@ -1,6 +1,8 @@
 package com.foghail.client
 
 import org.bouncycastle.crypto.digests.KeccakDigest
+import org.bouncycastle.crypto.digests.SHA256Digest
+import org.bouncycastle.crypto.signers.HMacDSAKCalculator
 import org.bouncycastle.crypto.ec.CustomNamedCurves
 import org.bouncycastle.math.ec.ECPoint
 import java.math.BigInteger
@@ -19,6 +21,11 @@ import java.security.SecureRandom
  *   - 憑證發行 = 向 3 個驗證節點各做一次盲簽；憑證驗證 = 驗 3 個簽章
  *   - 收據發行 = 同樣 3 次盲簽，訊息是 32 B 隨機序號
  * 計時方式與舊版 FogHailACL.blindIssue 相同（含發行方那一側的運算），兩者才能直接相比。
+ *
+ * v4（2026-10-14，回應程式稽核 P0-2）：每個部分簽章的申請多附一個「授權簽章」——
+ * 以太坊 personal_sign（secp256k1 ECDSA、RFC 6979、low-s）簽
+ * authDigest = keccak(abi.encode(合約, 鏈ID, 種類, 批次號, 節點編號, h))，h = keccak(R.x ‖ R.y ‖ e)。
+ * 量測多三項：授權簽章一次、v4 憑證發行（3 ×（盲簽＋授權））、v4 收據發行；對拍多一組 Python 向量。
  */
 object FogHailCredV3 {
     private val C = CustomNamedCurves.getByName("secp256k1")
@@ -101,6 +108,59 @@ object FogHailCredV3 {
         return Sig(addrRp, s.add(a).mod(N))
     }
 
+    // ------------------------------------------------------------------ v4：持有人授權簽章
+    val KIND_CRED: ByteArray = keccak("FOGHAIL_CRED".toByteArray(Charsets.US_ASCII))
+    val KIND_RCPT: ByteArray = keccak("FOGHAIL_RCPT".toByteArray(Charsets.US_ASCII))
+    private val HALF_N: BigInteger = N.shiftRight(1)
+    private val ETH_PREFIX = "\u0019Ethereum Signed Message:\n32".toByteArray(Charsets.US_ASCII)
+
+    /** abi.encode 的一個 32 B 字（address／uint 一律左補零） */
+    private fun word(b: ByteArray): ByteArray {
+        val o = ByteArray(32); System.arraycopy(b, 0, o, 32 - b.size, b.size); return o
+    }
+
+    fun sessionHash(R: ECPoint, e: BigInteger): ByteArray {
+        val q = R.normalize()
+        return keccak(to32(q.affineXCoord.toBigInteger()), to32(q.affineYCoord.toBigInteger()), to32(e))
+    }
+
+    fun authDigest(contract: ByteArray, chainId: Long, kind: ByteArray, ctx: Long, v: Int, h: ByteArray): ByteArray =
+        keccak(word(contract), to32(BigInteger.valueOf(chainId)), kind, to32(BigInteger.valueOf(ctx)),
+               to32(BigInteger.valueOf(v.toLong())), h)
+
+    fun ethAddress(d: BigInteger): ByteArray = addrOf(G.multiply(d))
+
+    /** personal_sign：ECDSA over keccak(前綴 ‖ digest)，RFC 6979 決定性 k、low-s；回傳 r ‖ s ‖ v（65 B）。 */
+    fun ethSign(d: BigInteger, digest: ByteArray): ByteArray {
+        val z = keccak(ETH_PREFIX, digest)
+        val zi = BigInteger(1, z)
+        val kc = HMacDSAKCalculator(SHA256Digest()); kc.init(N, d, z)
+        while (true) {
+            val k = kc.nextK()
+            val R = G.multiply(k).normalize()
+            val r = R.affineXCoord.toBigInteger().mod(N)
+            if (r.signum() == 0) continue
+            var s = k.modInverse(N).multiply(zi.add(r.multiply(d))).mod(N)
+            if (s.signum() == 0) continue
+            var rec = if (R.affineYCoord.toBigInteger().testBit(0)) 1 else 0
+            if (s > HALF_N) { s = N.subtract(s); rec = rec xor 1 }
+            return to32(r) + to32(s) + byteArrayOf((27 + rec).toByte())
+        }
+    }
+
+    /** v4 一次部分簽章的申請：盲簽會談＋持有人對這次會談的授權簽章。 */
+    fun blindSignV4(iss: Issuer, m: ByteArray, holder: BigInteger, contract: ByteArray, kind: ByteArray,
+                    ctx: Long, vIdx: Int): Pair<Sig, ByteArray> {
+        val r = iss.commit()
+        val a = randScalar(); val b = randScalar()
+        val rp = r.add(G.multiply(a)).add(iss.P.multiply(b)).normalize()
+        val addrRp = addrOf(rp)
+        val e = challenge(addrRp, m).add(b).mod(N)
+        val auth = ethSign(holder, authDigest(contract, 1337, kind, ctx, vIdx, sessionHash(r, e)))
+        val s = iss.respond(e)
+        return Sig(addrRp, s.add(a).mod(N)) to auth
+    }
+
     fun hex(b: ByteArray) = b.joinToString("") { "%02x".format(it) }
     fun unhex(s: String) = ByteArray(s.length / 2) { s.substring(2 * it, 2 * it + 2).toInt(16).toByte() }
 
@@ -156,6 +216,23 @@ object FogHailCredV3 {
 
         val serial = ByteArray(32) { 0x22 }               // 收據訊息 = 32 B 隨機序號
         res["receipt_issue_3of4"] = timeIt(n, warm) { vals.forEach { v -> blindSign(v, serial) } }
+
+        // v4：每個部分簽章多一個授權簽章（憑證由根私鑰簽、收據由假名私鑰簽）
+        val rootKey = randScalar(); val pseudKey = randScalar()
+        val contract = ByteArray(20) { 0x11 }
+        val hSample = sessionHash(G.multiply(BigInteger.valueOf(7)), BigInteger.valueOf(123456789))
+        res["auth_sign_once"] = timeIt(n, warm) {
+            ethSign(rootKey, authDigest(contract, 1337, KIND_CRED, 1, 0, hSample))
+        }
+        res["cred_issue_3of4_v4"] = timeIt(n, warm) {
+            vals.forEachIndexed { j, v -> blindSignV4(v, pseud, rootKey, contract, KIND_CRED, 1, j) }
+        }
+        res["receipt_issue_3of4_v4"] = timeIt(n, warm) {
+            vals.forEachIndexed { j, v -> blindSignV4(v, serial, pseudKey, contract, KIND_RCPT, 0, j) }
+        }
+        val dg = authDigest(contract, 1337, KIND_CRED, 1, 0, hSample)
+        res["auth_sample"] = mapOf("key_hex" to hex(to32(rootKey)), "digest_hex" to hex(dg),
+                                   "sig_hex" to hex(ethSign(rootKey, dg)), "addr_hex" to hex(ethAddress(rootKey)))
 
         res["correct_all_runs"] = (okCred == n + warm)
         res["cred_bytes"] = 179

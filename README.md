@@ -21,12 +21,31 @@ Table and figure numbers follow the current manuscript (revision of 2026-10-14).
 | `experiments/phase1` | **Blind matching**: salted-Bloom-filter fog matcher, matching quality, winner selection, FPR and grid sweeps | Table 3 (FogHail rows), Table 4, Table 5 (fog side), Figs. 3–4 |
 | `experiments/phase2` | **ORide baseline**: Paillier reconstruction of the encrypted-distance protocol (SHE figures from published SEAL numbers) | Table 3 (ORide row), Table 5 (ORide row) |
 | `experiments/phase3` | **BRIP baseline**: COR2Vec-style location embedding (skip-gram over the OSM road network), embedding inversion | Table 3 (BRIP row), Fig. 5, embedding-inversion row of Table 6 |
-| `experiments/phase4` | **QBFT deployment**: 4-node Hyperledger Besu chain; **v3 settlement contract** (root registry, batch opening, single settlement entry verifying 3-of-4 validator blind signatures, receipt deposit, roll-epoch salt beacon); latency harness | Table 8 |
-| `experiments/phase5` | **3-of-4 validator blind-signature credentials** (`foghail_cred.py`): threshold Schnorr blind signatures on secp256k1, ROS guard, receipts, batch accounting; client-cost benchmark; v1.0 single-issuer reference kept for comparison | Table 7 (estimated column) |
+| `experiments/phase4` | **QBFT deployment**: 4-node Hyperledger Besu chain; **v4 contract** (root registry, batch opening with an on-chain partial-signature budget, holder-authorized issuance and receipt logs, single settlement entry verifying 3-of-4 validator blind signatures, root-bound receipt deposit, roll-epoch salt beacon); protocol checks and latency harness | Table 8 |
+| `experiments/phase5` | **3-of-4 validator blind-signature credentials** (`foghail_cred.py`, v4): threshold Schnorr blind signatures on secp256k1, ROS guard, on-chain issuance budget, holder authorization, persisted session nonces, root-bound receipts; adversarial test suite; client-cost benchmark; v3 and v1.0 references kept for comparison | Table 7 (estimated column) |
 | `experiments/phase6` | Privacy attacks (dictionary, harvesting, bit-pattern linkage AUC), **anonymity set after decoding**, ablations | Table 6, Table 9 |
-| `experiments/e5v3_kotlin` | Kotlin port of the 3-of-4 credential for on-device measurement, JVM tests, Python cross-check of phone output | Table 7 (to replace the estimate with a handset measurement) |
+| `experiments/e5v3_kotlin` | Kotlin port of the 3-of-4 credential and the v4 authorization signature for on-device measurement, JVM tests, Python cross-check of phone output | Table 7 (to replace the estimate with a handset measurement) |
 | `mobile-benchmark` | **Smartphone benchmarks** (Kotlin, BouncyCastle): client-side encoding (E3) and single-session credential operations (E5) on a real handset | Table 5 (client side), Table 7 (measured column) |
 | `fog-node` | Standalone fog-node matcher: the same blind-matching core, runnable on any PC/Raspberry Pi | Fog-side latency spot-checks |
+
+## What changed in v1.2
+
+v1.2 answers a code audit of the v1.1 issuance logic (protocol v4). Settlement is unchanged.
+
+- **Shared issuance budget**: v1.1 let each validator sign B times per batch, so mixing signer subsets
+  yielded up to 4B/3 credentials. v1.2 gives each batch an on-chain budget of 3B partial signatures;
+  validators log every session (`logIssue`, `logReceipt`) before answering, so no mix exceeds B credentials.
+- **Holder authorization**: each logged session carries a signature of the root key (credential) or the
+  pseudonym key (receipt) over the session hash h = H(R, e); the contract verifies it. Validators receive
+  only blinded values.
+- **Persistence**: issuance state lives on-chain; validators persist session nonces and answer a nonce for
+  one challenge only, so a retry after a crash is safe.
+- **Root-bound receipts**: receipt serial = H(root ‖ r), recomputed from the depositor at deposit; returning
+  an unused credential requires a pseudonym signature. Two colluding roots can still swap receipts; the swap
+  is zero-sum (see `experiments/phase5/test_foghail_cred.py`).
+- Evidence: `experiments/phase5/test_foghail_cred.py` (10 adversarial tests, including a reproduction of the
+  audit's counter-example on the archived v3 code) and the live-chain checks in `experiments/phase4/run_e6_v4.py`.
+  Table 8 was re-measured on the v4 contract.
 
 ## What changed in v1.1
 
@@ -56,7 +75,7 @@ re-running anything. `NOTES.zh.md` files are extended notes in Chinese.
 ## Requirements
 
 ```
-pip install numpy pandas scipy matplotlib pyarrow requests ecdsa eth-utils scikit-learn
+pip install numpy pandas scipy matplotlib pyarrow requests ecdsa eth-utils eth-abi eth-account psutil scikit-learn
 ```
 
 - Python 3.10+ (developed on 3.14).
@@ -85,8 +104,8 @@ stay as they are, and scripts must be run from inside their own directory.
    be skipped).
 4. **Attacks/ablation**: in `experiments/phase6`, `python attacks.py` and
    `python ablation.py`; `python anonymity_set.py` for the anonymity set.
-5. **Credentials**: in `experiments/phase5`, `python bench_v3_client.py` (3-of-4
-   protocol self-check and client cost).
+5. **Credentials**: in `experiments/phase5`, `python test_foghail_cred.py` (adversarial
+   protocol tests) and `python bench_v4_client.py` (client cost).
 6. **On-device numbers**: build `mobile-benchmark` and press the three on-screen
    buttons (bit-level cross-check against the Python reference must pass first);
    for the 3-of-4 credential, see `experiments/e5v3_kotlin`.

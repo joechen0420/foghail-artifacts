@@ -1,0 +1,99 @@
+{
+  "test_p01_v3_reproduces_audit": {
+    "pass": true,
+    "detail": {
+      "v3_credentials_from_B3": 4,
+      "v3_per_validator_counts": [
+        3,
+        3,
+        3,
+        3
+      ]
+    }
+  },
+  "test_p01_audit_example": {
+    "pass": true,
+    "detail": {
+      "credentials_obtained": 3,
+      "fourth_refused": "V1: batch not open or budget exhausted"
+    }
+  },
+  "test_p01_random_strategies": {
+    "pass": true,
+    "detail": {
+      "trials": 60,
+      "max_credentials_over_B": 1.0
+    }
+  },
+  "test_p01_negative_rating_cannot_be_dropped": {
+    "pass": true,
+    "detail": {
+      "outstanding_without_receipt": 3,
+      "open_batch": "outstanding",
+      "rep_after_receipt": -2
+    }
+  },
+  "test_p02_authorization": {
+    "pass": true,
+    "detail": {
+      "cred_wrong_key": "V0: root authorization invalid",
+      "cred_old_batch_nonce": "V0: root authorization invalid",
+      "cred_replayed_auth": "V0: root authorization invalid",
+      "log_by_non_validator": "validator only",
+      "receipt_by_non_holder": "V0: pseudonym authorization invalid"
+    }
+  },
+  "test_p02_dataflow": {
+    "pass": true,
+    "detail": {
+      "cred_secret_values_checked": 48,
+      "rcpt_secret_values_checked": 34,
+      "validator_messages_scanned": 30,
+      "leaks": 0
+    }
+  },
+  "test_p03_restart_and_retry": {
+    "pass": true,
+    "detail": {
+      "second_receipt_after_restart": "V0: receipt already issued",
+      "fourth_validator_receipt": "V3: receipt already issued",
+      "retry_after_crash_valid_sig": true,
+      "logged_once": true,
+      "same_session_other_challenge": "session already answered another challenge",
+      "open_session_dropped_on_restart": "V2: unknown or expired session"
+    }
+  },
+  "test_ros_single_open_session": {
+    "pass": true,
+    "detail": {
+      "concurrent_commit": "issuer busy: concurrent blind session refused (ROS)",
+      "expired_session_answer": "V0: unknown or expired session"
+    }
+  },
+  "test_p1_receipt_binding_and_swap": {
+    "pass": true,
+    "detail": {
+      "deposit_others_receipt": "credential sig",
+      "front_run_unused_return": "possession",
+      "swap_X_Y": [
+        2,
+        -2
+      ],
+      "swap_sum_conserved": true
+    }
+  },
+  "test_happy_path_and_orphan_return": {
+    "pass": true,
+    "detail": {
+      "rep": [
+        1,
+        2
+      ],
+      "outstanding": [
+        0,
+        0
+      ],
+      "reopen_after_clearing": true
+    }
+  }
+}

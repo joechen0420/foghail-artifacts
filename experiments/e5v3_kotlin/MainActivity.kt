@@ -36,6 +36,9 @@ class MainActivity : Activity() {
     // v3 Python 參考真值（experiments/e5v3_kotlin/reference_vectors_v3.json）
     private val v3Msg = "1111111111111111111111111111111111111111"
     private val v3Known1 = "7e5f4552091a69125d5dfcb7b8c2659029395bdf"   // 私鑰 1 的以太坊地址（公認答案）
+    // v4 授權簽章的 Python 參考值（foghail_cred.esign(auth_digest(...))）
+    private val v4AuthSig = "57516efbfc0ac3112f22b564a69abb55a1240d68d62107574d7be20af3949f98" +
+        "3e23e7a2a5407aa6dc7d6cd894e49fa8b88c7cc4315e08db3ae80c0b80be8feb1c"
     private val v3Vectors = listOf(
         listOf("44b47b75112ccd766df0fc3f6cd3970b7bcc50d857915211b48ea6e03fe56250",
                "914b727fcea9985a7b8f746c99dde7ac2fda9cab",
@@ -162,6 +165,11 @@ class MainActivity : Activity() {
         iss.commit()
         val rosOk = runCatching { iss.commit() }.isFailure
         line("同一把金鑰不能同時開兩個流程（ROS）", rosOk)
+        // v4 授權簽章：與 Python 簽出的位元組完全相同（RFC 6979 決定性簽章）
+        val key = BigInteger("4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318", 16)
+        val h = V.sessionHash(V.G.multiply(BigInteger.valueOf(7)), BigInteger.valueOf(123456789))
+        val auth = V.hex(V.ethSign(key, V.authDigest(ByteArray(20) { 0x11 }, 1337, V.KIND_CRED, 1, 2, h)))
+        line("v4 授權簽章與 Python 相同", auth == v4AuthSig, "\n  應為 $v4AuthSig\n  實得 $auth")
         sb.append("\n結果：${if (allPass) "全部通過 ✓ 可以按 ⑤ 量測了" else "有不符 ✗ 先不要量，截圖回報"}")
         show(sb.toString())
     }
@@ -194,10 +202,14 @@ class MainActivity : Activity() {
             "憑證驗證 3/4" to "cred_verify_3of4",
             "憑證出示" to "cred_show",
             "收據發行 3/4" to "receipt_issue_3of4",
+            "授權簽章一次（v4）" to "auth_sign_once",
+            "憑證發行 v4" to "cred_issue_3of4_v4",
+            "收據發行 v4" to "receipt_issue_3of4_v4",
         )
         for ((label, key) in rows) sb.append("%-16s %9.3f %9.3f\n".format(label, s(key).p50, s(key).p95))
         val perTrip = s("cred_issue_3of4").p50 + s("receipt_issue_3of4").p50
-        sb.append("\n每趟合計（憑證＋收據）p50 = %.2f ms\n".format(perTrip))
+        val perTripV4 = s("cred_issue_3of4_v4").p50 + s("receipt_issue_3of4_v4").p50
+        sb.append("\n每趟合計（憑證＋收據）p50 = %.2f ms（v3）、%.2f ms（v4，論文採用）\n".format(perTrip, perTripV4))
         sb.append("正確性：${if (r["correct_all_runs"] == true) "✓ 全部驗證通過" else "✗ 有驗證失敗，請截圖回報"}\n")
         sb.append("\n請按 ⑥ 複製完整結果，貼到 LINE／Email 傳給老師。")
         show(sb.toString())

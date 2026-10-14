@@ -1,0 +1,25 @@
+{
+  "desktop_ms": {
+    "v1_r1_single_issue": 2.621900001031463,
+    "k1_blind_session": 3.2501499972568126,
+    "k1_auth_signature": 0.5261000005702954,
+    "v3_3of4_issue": 9.913349998896592,
+    "v4_3of4_issue_with_auth": 11.630350001723855
+  },
+  "ratio_over_v1": {
+    "v3": 3.780979440480816,
+    "v4": 4.435848048037088
+  },
+  "pinned_core": 2,
+  "phone_v1_measured_ms": {
+    "issue_ms": 2.15,
+    "verify_ms": 1.41
+  },
+  "phone_estimated_ms": {
+    "v3_credential_issue": 8.129105797033754,
+    "v3_per_trip": 16.258211594067507,
+    "v4_credential_issue": 9.537073303279739,
+    "v4_receipt_issue": 9.537073303279739,
+    "v4_per_trip": 19.074146606559477
+  }
+}
