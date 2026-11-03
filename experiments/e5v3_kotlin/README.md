@@ -2,8 +2,10 @@
 
 Kotlin port of the 3-of-4 validator blind-signature credential and of the v4 authorization
 signature (Ethereum personal_sign, secp256k1 ECDSA, RFC 6979, low-s), for measuring their cost
-on a physical Android handset. Table 7 currently reports this cost as an estimate
-scaled from a desktop ratio; this harness replaces the estimate with a measurement.
+on a physical Android handset. Table 7 reports the Galaxy Tab A 8.0 measurement from this
+harness and a Redmi Note 8 Pro value scaled by a same-device ratio. Since v1.3, button ⑦
+also compares random, derived, and precomputed pseudonym keys for E3; it needs
+`FogHailBloom.kt` and `E3LatencyBench.kt` from `../../mobile-benchmark`.
 
 | File | Contents |
 |---|---|

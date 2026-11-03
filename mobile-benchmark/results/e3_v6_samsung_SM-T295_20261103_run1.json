@@ -1,0 +1,22 @@
+{
+ "test": "E3 random vs derived vs precomputed pseudonym key",
+ "app": "v6-e3-20261103",
+ "device": "samsung SM-T295",
+ "android": "9",
+ "sdk": 28,
+ "iters": 1000,
+ "warmup": 100,
+ "derive_check_pass": true,
+ "rounds": [
+  {"round": 1, "mode": "random", "T_grid": {"p50_ms": 0.025833, "p95_ms": 0.041354}, "T_neighbor": {"p50_ms": 0.010312, "p95_ms": 0.091615}, "T_bloom": {"p50_ms": 0.964114, "p95_ms": 1.165677}, "T_sign": {"p50_ms": 1.086667, "p95_ms": 1.622864}, "T_total": {"p50_ms": 2.10724, "p95_ms": 2.780417}},
+  {"round": 1, "mode": "derived", "T_grid": {"p50_ms": 0.016354, "p95_ms": 0.036458}, "T_neighbor": {"p50_ms": 0.009115, "p95_ms": 0.018854}, "T_bloom": {"p50_ms": 1.031979, "p95_ms": 1.224479}, "T_sign": {"p50_ms": 17.715885, "p95_ms": 18.987604}, "T_total": {"p50_ms": 18.880677, "p95_ms": 20.134479}},
+  {"round": 1, "mode": "precomputed", "T_grid": {"p50_ms": 0.007343, "p95_ms": 0.008802}, "T_neighbor": {"p50_ms": 0.009323, "p95_ms": 0.010989}, "T_bloom": {"p50_ms": 1.011511, "p95_ms": 1.204166}, "T_sign": {"p50_ms": 0.599792, "p95_ms": 0.715105}, "T_total": {"p50_ms": 1.675208, "p95_ms": 1.89474}, "T_derive": {"p50_ms": 16.857031, "p95_ms": 17.708542}},
+  {"round": 2, "mode": "random", "T_grid": {"p50_ms": 0.004115, "p95_ms": 0.007656}, "T_neighbor": {"p50_ms": 0.005313, "p95_ms": 0.009271}, "T_bloom": {"p50_ms": 0.95599, "p95_ms": 1.155208}, "T_sign": {"p50_ms": 0.775365, "p95_ms": 1.01823}, "T_total": {"p50_ms": 1.73, "p95_ms": 2.158698}},
+  {"round": 2, "mode": "derived", "T_grid": {"p50_ms": 0.006927, "p95_ms": 0.008385}, "T_neighbor": {"p50_ms": 0.00901, "p95_ms": 0.01427}, "T_bloom": {"p50_ms": 1.014792, "p95_ms": 1.219219}, "T_sign": {"p50_ms": 17.216459, "p95_ms": 18.126094}, "T_total": {"p50_ms": 18.363386, "p95_ms": 19.175677}},
+  {"round": 2, "mode": "precomputed", "T_grid": {"p50_ms": 0.007343, "p95_ms": 0.008802}, "T_neighbor": {"p50_ms": 0.009323, "p95_ms": 0.011979}, "T_bloom": {"p50_ms": 1.020209, "p95_ms": 1.224792}, "T_sign": {"p50_ms": 0.565677, "p95_ms": 0.678802}, "T_total": {"p50_ms": 1.641458, "p95_ms": 1.868021}, "T_derive": {"p50_ms": 16.681562, "p95_ms": 17.610416}},
+  {"round": 3, "mode": "random", "T_grid": {"p50_ms": 0.003229, "p95_ms": 0.007291}, "T_neighbor": {"p50_ms": 0.00448, "p95_ms": 0.008855}, "T_bloom": {"p50_ms": 0.94948, "p95_ms": 1.127344}, "T_sign": {"p50_ms": 0.734271, "p95_ms": 0.959635}, "T_total": {"p50_ms": 1.698697, "p95_ms": 2.063698}},
+  {"round": 3, "mode": "derived", "T_grid": {"p50_ms": 0.006927, "p95_ms": 0.008437}, "T_neighbor": {"p50_ms": 0.009011, "p95_ms": 0.017187}, "T_bloom": {"p50_ms": 1.020417, "p95_ms": 1.209011}, "T_sign": {"p50_ms": 17.234115, "p95_ms": 18.116563}, "T_total": {"p50_ms": 18.376927, "p95_ms": 19.165104}},
+  {"round": 3, "mode": "precomputed", "T_grid": {"p50_ms": 0.007343, "p95_ms": 0.00875}, "T_neighbor": {"p50_ms": 0.009323, "p95_ms": 0.015781}, "T_bloom": {"p50_ms": 1.020729, "p95_ms": 1.215104}, "T_sign": {"p50_ms": 0.565781, "p95_ms": 0.68}, "T_total": {"p50_ms": 1.647864, "p95_ms": 1.868542}, "T_derive": {"p50_ms": 16.682708, "p95_ms": 17.531615}}
+ ],
+ "summary": {"random_total_p50_ms": 1.73, "random_total_p95_ms": 2.158698, "derived_total_p50_ms": 18.376927, "derived_total_p95_ms": 19.175677, "ratio_p50": 10.622501156069363, "ratio_p95": 8.882982705315891, "precomputed_total_p50_ms": 1.647864, "precomputed_total_p95_ms": 1.868542, "pre_ratio_p50": 0.9525225433526011, "pre_ratio_p95": 0.865587497649046, "derive_p50_ms": 16.682708, "derive_p95_ms": 17.610416}
+}

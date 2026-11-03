@@ -1,11 +1,21 @@
 package com.foghail.client
 
+import org.bouncycastle.asn1.x9.ECNamedCurveTable
 import org.bouncycastle.crypto.digests.Blake2bDigest
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import java.security.KeyPairGenerator
+import org.bouncycastle.math.ec.FixedPointCombMultiplier
+import java.math.BigInteger
+import java.nio.ByteBuffer
+import java.security.AlgorithmParameters
+import java.security.KeyFactory
+import java.security.KeyPair
 import java.security.MessageDigest
 import java.security.Security
 import java.security.spec.ECGenParameterSpec
+import java.security.spec.ECParameterSpec
+import java.security.spec.ECPoint
+import java.security.spec.ECPrivateKeySpec
+import java.security.spec.ECPublicKeySpec
 import java.util.BitSet
 import kotlin.math.floor
 
@@ -82,16 +92,29 @@ object FogHailBloom {
         return bf
     }
 
-    /** 每行程假名：temp_sk = H(root_sk || trip_ts) → secp256r1 公鑰。 */
-    fun derivePseudonym(rootSk: ByteArray, ts: Long): java.security.KeyPair {
+    private val R1 = ECNamedCurveTable.getByName("secp256r1")
+    private val R1_JCA: ECParameterSpec = AlgorithmParameters.getInstance("EC").run {
+        init(ECGenParameterSpec("secp256r1")); getParameterSpec(ECParameterSpec::class.java)
+    }
+
+    /**
+     * 每行程假名：temp_sk = SHA-256(root_sk || t) mod n，t 為 8 位元組大端序的行程計數器。
+     * 與論文式 (6) 及鏈上實驗 experiments/phase4/run_e6_v3.py 的 User.next_pseudonym 同一構造
+     * （那邊是 secp256k1，這裡的配對階段用 secp256r1）。2026-10-30 前這裡算了雜湊卻沒用、
+     * 實際是隨機產生金鑰，與論文不符，已改正。
+     * 公鑰 = temp_sk·G 用 BouncyCastle 輕量 API 算；金鑰物件交給平台 provider 建，
+     * 因為 Android 9（API 28）起平台移除了 "BC" 的 EC 實作，簽章仍走平台預設 provider。
+     */
+    fun derivePseudonym(rootSk: ByteArray, t: Long): KeyPair {
         val md = MessageDigest.getInstance("SHA-256")
-        md.update(rootSk); md.update(ts.toString().toByteArray())
-        // 此處以 seed 派生金鑰（實作可用確定性 EC 金鑰生成）
-        // 注意：Android 9（API 28）起，平台移除 BouncyCastle("BC") 的 EC 實作，
-        // 指定 "BC" 會拋 KeyPairGenerator.EC 例外；改用平台預設 provider（AndroidOpenSSL）。
-        // 曲線仍為 secp256r1（下一行明確指定），演算法不變，不影響量測。
-        val kpg = KeyPairGenerator.getInstance("EC")
-        kpg.initialize(ECGenParameterSpec("secp256r1"))
-        return kpg.generateKeyPair()
+        md.update(rootSk); md.update(ByteBuffer.allocate(8).putLong(t).array())
+        val d = BigInteger(1, md.digest()).mod(R1.n)
+        require(d.signum() != 0) { "temp_sk = 0（機率 2^-256）" }
+        val q = FixedPointCombMultiplier().multiply(R1.g, d).normalize()
+        val kf = KeyFactory.getInstance("EC")
+        val pub = kf.generatePublic(ECPublicKeySpec(
+            ECPoint(q.affineXCoord.toBigInteger(), q.affineYCoord.toBigInteger()), R1_JCA))
+        val priv = kf.generatePrivate(ECPrivateKeySpec(d, R1_JCA))
+        return KeyPair(pub, priv)
     }
 }

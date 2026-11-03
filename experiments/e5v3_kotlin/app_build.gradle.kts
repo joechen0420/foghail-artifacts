@@ -10,8 +10,8 @@ android {
         applicationId = "com.foghail.client"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "v3-20261014"
+        versionCode = 5
+        versionName = "v6-e3-20261103"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

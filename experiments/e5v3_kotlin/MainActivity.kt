@@ -12,8 +12,12 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigInteger
+import java.security.Signature
+import java.security.interfaces.ECPrivateKey
+import java.security.interfaces.ECPublicKey
 
 /**
  * FogHail 量測 App（2026-10-14 v3 版）。
@@ -21,6 +25,12 @@ import java.math.BigInteger
  *   ④ v3 對拍（必先過）：手機算出的地址與簽章驗證結果，必須和 Python 參考版一致
  *   ⑤ 量 v3 憑證：3/4 門檻盲簽的發行／驗證／收據時間，並在同一次執行裡重量舊版 r1 當基準
  *   ⑥ 複製結果：把 ⑤ 的完整結果（JSON）複製到剪貼簿，直接貼到 LINE／Email 回傳
+ *
+ * 2026-10-30 v5（E3 重測）：新增 ⑦。假名金鑰改成真的由根私鑰推導後，E3 的簽章段要重量；
+ *   ⑦ 在同一次執行裡交替跑「舊：隨機產生金鑰」與「新：由根私鑰推導」各 3 輪，
+ *   先檢查推導結果與 Python 參考值一致才開始計時。⑥ 改成複製最近一次 ⑤ 或 ⑦ 的結果。
+ * 2026-11-03 v6：⑦ 加第三種「預先推導」——推導在計時外（閒置時先算好），另記推導本身的時間。
+ *   三種交替各 3 輪；論文用「預先推導／隨機」的同機倍率換算 Redmi。
  * 繼承基礎 android.app.Activity（不是 AppCompatActivity），避免主題問題造成閃退。
  */
 class MainActivity : Activity() {
@@ -54,6 +64,10 @@ class MainActivity : Activity() {
                "d85de3863bda28cd461bc05f3890cbbc37663fe412bae67cc0e0dfa3618a534d"),
     )
 
+    // ⑦ 推導對拍：root_sk = 32 個 0x01、t = 7，SHA-256(root||t 8B BE) mod n（secp256r1）的 Python 參考值
+    private val e3RefD = "bd4f52148138952712e9584ef9db8e55aaf44d4d404541c67b32d3aef69a8e1"
+    private val e3RefX = "a09813e5741e83715d97a7ea7d2dc88a91065c8cd57403a09be93df16577fe6e"
+
     private lateinit var out: TextView
     private var lastJson: String? = null
 
@@ -73,7 +87,7 @@ class MainActivity : Activity() {
             root.addView(Button(this).apply {
                 text = label
                 setOnClickListener {
-                    out.text = "執行中，請稍候…（⑤ 約需 1–3 分鐘，請不要切到別的 App）"
+                    out.text = "執行中，請稍候…（⑤⑦ 約需 1–3 分鐘，請不要切到別的 App）"
                     Thread {
                         val result = runCatching(action).exceptionOrNull()?.let {
                             "錯誤：${it.message}\n（見教學文件的疑難排解）"
@@ -91,9 +105,10 @@ class MainActivity : Activity() {
         addButton("④ v3 對拍（必先過）") { verifyV3() }
         addButton("⑤ 量 v3 憑證（3/4 門檻）") { measureV3() }
         root.addView(Button(this).apply {
-            text = "⑥ 複製 ⑤ 的結果"
+            text = "⑥ 複製最近一次 ⑤ 或 ⑦ 的結果"
             setOnClickListener { copyResult() }
         })
+        addButton("⑦ E3 重測：新舊金鑰對照") { measureE3Compare() }
 
         val scroll = ScrollView(this).apply { addView(root.apply { addView(out) }) }
         setContentView(scroll)
@@ -174,6 +189,70 @@ class MainActivity : Activity() {
         show(sb.toString())
     }
 
+    // ---------------------------------------------------------------- ⑦（v5 新增：E3 重測）
+    private fun measureE3Compare() {
+        val root = ByteArray(32) { 1 }
+        // 先對拍：推導出的私鑰與公鑰 x 座標必須和 Python 一致，簽章要驗得過
+        val kp = FogHailBloom.derivePseudonym(root, 7)
+        val d = (kp.private as ECPrivateKey).s.toString(16)
+        val x = (kp.public as ECPublicKey).w.affineX.toString(16)
+        val msg = "foghail-e3".toByteArray()
+        val sig = Signature.getInstance("SHA256withECDSA").run { initSign(kp.private); update(msg); sign() }
+        val ok = Signature.getInstance("SHA256withECDSA").run { initVerify(kp.public); update(msg); verify(sig) }
+        val checkPass = d == e3RefD && x == e3RefX && ok
+        if (!checkPass) {
+            show("⑦ 推導對拍不符 ✗ 先不要量，截圖回報\n\n私鑰 應為 $e3RefD\n     實得 $d\n公鑰x 應為 $e3RefX\n     實得 $x\n簽章驗證 $ok")
+            return
+        }
+        FogHailBloom.m = 512; FogHailBloom.k = 5
+        val segs = listOf("T_grid", "T_neighbor", "T_bloom", "T_sign", "T_total")
+        val rounds = JSONArray()
+        val modes = listOf("random", "derived", "precomputed")
+        val modeName = mapOf("random" to "舊（隨機金鑰）", "derived" to "推導（計時內）", "precomputed" to "預先推導")
+        val tot = modes.associateWith { ArrayList<Double>() }
+        val tot95 = modes.associateWith { ArrayList<Double>() }
+        val der = ArrayList<Double>(); val der95 = ArrayList<Double>()
+        for (r in 1..3) for (mode in modes) {     // 交替跑，抵消降頻與溫度漂移
+            show("⑦ 量測中：第 $r/3 輪，${modeName[mode]}…")
+            val res = E3LatencyBench.run(40.75, -73.99, root, "foghail-epoch-0", mode)
+            val o = JSONObject().put("round", r).put("mode", mode)
+            for (k in segs + listOf("T_derive")) res[k]?.let { o.put(k, JSONObject().put("p50_ms", it.p50).put("p95_ms", it.p95)) }
+            rounds.put(o)
+            tot[mode]!!.add(res["T_total"]!!.p50); tot95[mode]!!.add(res["T_total"]!!.p95)
+            res["T_derive"]?.let { der.add(it.p50); der95.add(it.p95) }
+        }
+        fun med(xs: List<Double>) = xs.sorted()[xs.size / 2]
+        val r50 = med(tot["random"]!!); val d50 = med(tot["derived"]!!); val p50 = med(tot["precomputed"]!!)
+        val r95 = med(tot95["random"]!!); val d95 = med(tot95["derived"]!!); val p95 = med(tot95["precomputed"]!!)
+        val json = JSONObject()
+        json.put("test", "E3 random vs derived vs precomputed pseudonym key")
+        json.put("app", "v6-e3-20261103")
+        json.put("device", "${Build.MANUFACTURER} ${Build.MODEL}")
+        json.put("android", Build.VERSION.RELEASE)
+        json.put("sdk", Build.VERSION.SDK_INT)
+        json.put("iters", 1000); json.put("warmup", 100)
+        json.put("derive_check_pass", checkPass)
+        json.put("rounds", rounds)
+        json.put("summary", JSONObject()
+            .put("random_total_p50_ms", r50).put("random_total_p95_ms", r95)
+            .put("derived_total_p50_ms", d50).put("derived_total_p95_ms", d95)
+            .put("ratio_p50", d50 / r50).put("ratio_p95", d95 / r95)
+            .put("precomputed_total_p50_ms", p50).put("precomputed_total_p95_ms", p95)
+            .put("pre_ratio_p50", p50 / r50).put("pre_ratio_p95", p95 / r95)
+            .put("derive_p50_ms", med(der)).put("derive_p95_ms", med(der95)))
+        lastJson = json.toString(1)
+        val sb = StringBuilder("⑦ E3 新舊對照（${Build.MANUFACTURER} ${Build.MODEL}，Android ${Build.VERSION.RELEASE}）\n\n")
+        sb.append("推導對拍：✓ 通過\n\n")
+        sb.append("T_total（三輪取中位）  p50(ms)   p95(ms)\n")
+        sb.append("舊：隨機金鑰          %8.3f %8.3f\n".format(r50, r95))
+        sb.append("推導（計時內）        %8.3f %8.3f\n".format(d50, d95))
+        sb.append("預先推導              %8.3f %8.3f\n".format(p50, p95))
+        sb.append("預先推導/舊倍率       %8.2f %8.2f\n".format(p50 / r50, p95 / r95))
+        sb.append("推導本身（閒置時）    %8.3f %8.3f\n".format(med(der), med(der95)))
+        sb.append("\n完成 ✓ 請按 ⑥ 複製結果，貼給老師")
+        show(sb.toString())
+    }
+
     private fun measureV3() {
         val r = FogHailCredV3.bench(200, 20)
         fun s(k: String) = r[k] as FogHailCredV3.Stat
@@ -218,10 +297,10 @@ class MainActivity : Activity() {
     private fun copyResult() {
         val j = lastJson
         if (j == null) {
-            Toast.makeText(this, "請先按 ⑤ 量測", Toast.LENGTH_SHORT).show(); return
+            Toast.makeText(this, "請先按 ⑤ 或 ⑦ 量測", Toast.LENGTH_SHORT).show(); return
         }
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cm.setPrimaryClip(ClipData.newPlainText("FogHail v3 結果", j))
+        cm.setPrimaryClip(ClipData.newPlainText("FogHail 結果", j))
         Toast.makeText(this, "已複製，可以貼到 LINE／Email 了", Toast.LENGTH_LONG).show()
     }
 }

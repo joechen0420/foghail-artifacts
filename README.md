@@ -2,9 +2,9 @@
 
 Source code and experiment scripts accompanying the manuscript:
 
-> **FogHail: A Fog-Assisted Privacy-Preserving Ride-Hailing System with Two-Sided
-> Unlinkable Reputation on a Permissioned Blockchain**
-> Ming-Chiao Chen, Yu Wei Tung — National Taitung University, Taiwan
+> **Privacy-Preserving Ride-Hailing with Fog-Assisted Proximity Matching and
+> Blockchain-Based Anonymous Reputation**
+> Ming-Chiao Chen, Reen-Cheng Wang, Chun-Yi Tsai, Yu Wei Tung — National Taitung University, Taiwan
 > (submitted to *Journal of Network and Computer Applications*, 2026)
 
 The repository covers the four artifact groups cited in the paper's Data availability
@@ -13,20 +13,39 @@ chain deployment — plus the attack/ablation suite and supporting reference cod
 
 ## Repository map
 
-Table and figure numbers follow the current manuscript (revision of 2026-10-14).
+Table and figure numbers follow the submitted manuscript (revision of 2026-11-03).
 
 | Directory | Contents | Reproduces (paper) |
 |---|---|---|
-| `experiments/phase0` | NYC data download, cleaning, driver-supply model, plaintext oracle | §6.1 dataset statistics; ground truth for Table 3 |
-| `experiments/phase1` | **Blind matching**: salted-Bloom-filter fog matcher, matching quality, winner selection, FPR and grid sweeps | Table 3 (FogHail rows), Table 4, Table 5 (fog side), Figs. 3–4 |
-| `experiments/phase2` | **ORide baseline**: Paillier reconstruction of the encrypted-distance protocol (SHE figures from published SEAL numbers) | Table 3 (ORide row), Table 5 (ORide row) |
-| `experiments/phase3` | **BRIP baseline**: COR2Vec-style location embedding (skip-gram over the OSM road network), embedding inversion | Table 3 (BRIP row), Fig. 5, embedding-inversion row of Table 6 |
+| `experiments/phase0` | NYC data download, cleaning, driver-supply model, plaintext oracle | §6.1 dataset statistics; ground truth for Table 4 |
+| `experiments/phase1` | **Blind matching**: salted-Bloom-filter fog matcher, matching quality, winner selection, FPR and grid sweeps | Table 4 (FogHail rows), winner-selection comparison in §6.2, Table 5 (fog side), Figs. 3–4 |
+| `experiments/phase2` | **ORide baseline**: Paillier reconstruction of the encrypted-distance protocol (SHE figures from published SEAL numbers) | Table 4 (ORide row), Table 5 (ORide column) |
+| `experiments/phase3` | **BRIP baseline**: COR2Vec-style location embedding (skip-gram over the OSM road network), embedding inversion | Table 4 (BRIP row), Fig. 5, embedding-lookup result in §6.4 |
 | `experiments/phase4` | **QBFT deployment**: 4-node Hyperledger Besu chain; **v4 contract** (root registry, batch opening with an on-chain partial-signature budget, holder-authorized issuance and receipt logs, single settlement entry verifying 3-of-4 validator blind signatures, root-bound receipt deposit, roll-epoch salt beacon); protocol checks and latency harness | Table 8 |
-| `experiments/phase5` | **3-of-4 validator blind-signature credentials** (`foghail_cred.py`, v4): threshold Schnorr blind signatures on secp256k1, ROS guard, on-chain issuance budget, holder authorization, persisted session nonces, root-bound receipts; adversarial test suite; client-cost benchmark; v3 and v1.0 references kept for comparison | Table 7 (estimated column) |
-| `experiments/phase6` | Privacy attacks (dictionary, harvesting, bit-pattern linkage AUC), **anonymity set after decoding**, ablations | Table 6, Table 9 |
-| `experiments/e5v3_kotlin` | Kotlin port of the 3-of-4 credential and the v4 authorization signature for on-device measurement, JVM tests, Python cross-check of phone output | Table 7 (to replace the estimate with a handset measurement) |
-| `mobile-benchmark` | **Smartphone benchmarks** (Kotlin, BouncyCastle): client-side encoding (E3) and single-session credential operations (E5) on a real handset | Table 5 (client side), Table 7 (measured column) |
+| `experiments/phase5` | **3-of-4 validator blind-signature credentials** (`foghail_cred.py`, v4): threshold Schnorr blind signatures on secp256k1, ROS guard, on-chain issuance budget, holder authorization, persisted session nonces, root-bound receipts; adversarial test suite; client-cost benchmark; v3 and v1.0 references kept for comparison | Python reference for the protocol timed in Table 7 |
+| `experiments/phase6` | Privacy attacks (dictionary, harvesting, bit-pattern linkage AUC), **anonymity set after decoding**, ablations | Table 6; driver nine-cell ablation in §4.2 |
+| `experiments/e5v3_kotlin` | Measurement app (Kotlin): the 3-of-4 credential and v4 authorization signature, plus button ⑦ for the pseudonym-key comparison of v1.3; JVM tests, Python cross-check of phone output | Table 7 (Galaxy Tab A measured column and Redmi scaled column) |
+| `mobile-benchmark` | **Smartphone benchmarks** (Kotlin, BouncyCastle): client-side encoding (E3), pseudonym-key derivation, and single-session credential operations (E5) on a real handset; raw phone results in `results/` | Table 5 (client side), §6.3 precomputed-key measurement, Table 7 (single-session column) |
 | `fog-node` | Standalone fog-node matcher: the same blind-matching core, runnable on any PC/Raspberry Pi | Fog-side latency spot-checks |
+
+## What changed in v1.3
+
+v1.3 aligns the handset code with the key derivation described in the paper (§4.3, §5.1). Protocol,
+contracts, and all other measurements are unchanged.
+
+- **Derived request-signing key**: up to v1.2, `FogHailBloom.derivePseudonym` drew a fresh random
+  secp256r1 key on each call. It now derives sk = SHA-256(root ‖ t as 8-byte big-endian) mod n, the
+  same construction as the settlement key, and computes pk = sk·G.
+- **Precomputed mode**: the key depends only on the root key and the trip index t, so the client can
+  derive it while idle after the previous trip. `E3LatencyBench.run(..., keyMode)` now accepts
+  `"random"` (the v1.2 behaviour), `"derived"` (derivation inside the timed region), and
+  `"precomputed"` (derivation before t0, timed separately as `T_derive`).
+- **Measurement**: button ⑦ of the app in `experiments/e5v3_kotlin` first checks the derived key
+  against the Python value, then alternates the three modes for three rounds each. Two runs on a Galaxy
+  Tab A 8.0 (SM-T295, Android 9) are in `mobile-benchmark/results/`; `check_e3_result.py` summarizes
+  them. With the key precomputed, encoding plus signature took 0.95× the fresh-random-key latency
+  (1.65 vs. 1.73 ms median), and derivation itself took 16.7 ms median. The Redmi figure in Table 5
+  (0.70 ms) was measured with the fresh random key and therefore bounds the request path from above.
 
 ## What changed in v1.2
 
@@ -108,7 +127,8 @@ stay as they are, and scripts must be run from inside their own directory.
    protocol tests) and `python bench_v4_client.py` (client cost).
 6. **On-device numbers**: build `mobile-benchmark` and press the three on-screen
    buttons (bit-level cross-check against the Python reference must pass first);
-   for the 3-of-4 credential, see `experiments/e5v3_kotlin`.
+   for the 3-of-4 credential and the pseudonym-key comparison (button ⑦), see
+   `experiments/e5v3_kotlin`.
 7. **Chain**: follow `experiments/phase4/README.md`.
 
 ## Honest-disclosure notes
@@ -118,8 +138,11 @@ stay as they are, and scripts must be run from inside their own directory.
   reconstructed with Paillier additive HE and verified exact (phase2).
 - The BRIP embedding is a faithful skip-gram re-implementation of COR2Vec's
   co-occurrence objective; FastText subword features are not modeled (phase3).
-- The 3-of-4 credential cost on the handset (Table 7) is currently scaled from a
-  desktop ratio; `experiments/e5v3_kotlin` is the harness for measuring it directly.
+- The 3-of-4 credential cost was measured on a Galaxy Tab A 8.0; the Redmi Note 8 Pro
+  column of Table 7 is scaled from it by a same-device ratio (`experiments/e5v3_kotlin`).
+- The Redmi client-processing figure in Table 5 predates v1.3 and used a fresh random
+  key inside the timed region; the v1.3 tablet runs in `mobile-benchmark/results/` show
+  that the precomputed derived key is not slower (0.95×).
 - Details of each simplification are recorded in the per-directory notes.
 
 ## License and citation
